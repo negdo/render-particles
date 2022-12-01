@@ -2,6 +2,7 @@
 import bpy
 from bpy.utils import resource_path
 from pathlib import Path
+from mathutils import Vector
 
 class insertParticles(bpy.types.Operator):
     bl_idname = "particles.insert_particles"
@@ -22,9 +23,6 @@ class insertParticles(bpy.types.Operator):
 
         # get camera position
         camera = bpy.context.scene.camera
-        camera_location = camera.location
-        camera_rotation = camera.rotation_euler
-        camera_focus = camera.data.dof.focus_distance
 
         # get particles object
         selected_objs = bpy.context.selected_objects
@@ -39,9 +37,27 @@ class insertParticles(bpy.types.Operator):
         if particles_obj is None:
             self.report({'ERROR'}, "Can not find particles object")
             return {'CANCELLED'}
+
+        # calculate camera focus point location
+        focus_point = camera.location + camera.data.dof.focus_distance * camera.rotation_euler.to_matrix().to_4x4() @ Vector((0, 0, -1))
         
-        # set particles object location to camera location
-        particles_obj.location = camera.location
+        # set particles object location middle between camera and focus point
+        particles_obj.location = (camera.location + focus_point) / 2
+        
+        # get camera fov
+        fov = camera.data.angle
+        print(fov)
+
+        # calculate width at focus point at fov
+        width = camera.data.dof.focus_distance * camera.data.sensor_width / camera.data.lens
+
+        # set particles object scale
+        particles_obj.scale = (width * 0.7, width * 0.7, camera.data.dof.focus_distance * 0.5)
+        # apply scale
+        bpy.ops.object.transform_apply(location=False, rotation=False, scale=True)
+
+        # set particles object rotation
+        particles_obj.rotation_euler = camera.rotation_euler
         
             
 
