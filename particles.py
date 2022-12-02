@@ -21,9 +21,6 @@ class insertParticles(bpy.types.Operator):
         # append particles object from file
         self.append(context)
 
-        # get camera position
-        camera = bpy.context.scene.camera
-
         # get particles object
         selected_objs = bpy.context.selected_objects
         particles_obj = None
@@ -38,31 +35,39 @@ class insertParticles(bpy.types.Operator):
             self.report({'ERROR'}, "Can not find particles object")
             return {'CANCELLED'}
 
-        # calculate camera focus point location
-        focus_point = camera.location + camera.data.dof.focus_distance * camera.rotation_euler.to_matrix().to_4x4() @ Vector((0, 0, -1))
-        
-        # set particles object location middle between camera and focus point
-        particles_obj.location = (camera.location + focus_point) / 2
-        
-        # get camera fov
-        fov = camera.data.angle
-        print(fov)
-
-        # calculate width at focus point at fov
-        width = camera.data.dof.focus_distance * camera.data.sensor_width / camera.data.lens
-
-        # set particles object scale
-        particles_obj.scale = (width * 0.7, width * 0.7, camera.data.dof.focus_distance * 0.5)
-        # apply scale
-        bpy.ops.object.transform_apply(location=False, rotation=False, scale=True)
-
-        # set particles object rotation
-        particles_obj.rotation_euler = camera.rotation_euler
-        
-            
-
+        # set location between camera and focus point
+        self.set_location(context, particles_obj)
         return {'FINISHED'}
 
+    def set_location(self, context, particles_obj):
+        try:
+            # get camera
+            camera = context.scene.camera
+
+            # get focus distance
+            focus_distance = context.scene.camera.data.dof.focus_distance
+            if camera.data.dof.focus_object != None:
+                focus_distance = (camera.data.dof.focus_object.location - camera.location).length
+
+            # calculate camera focus point location
+            focus_point = camera.location + focus_distance * camera.rotation_euler.to_matrix().to_4x4() @ Vector((0, 0, -1))
+            
+            # set particles object location middle between camera and focus point
+            particles_obj.location = (camera.location + focus_point) / 2
+
+            # calculate width at focus point at fov
+            width = focus_distance * camera.data.sensor_width / camera.data.lens * 0.5
+            length = focus_distance * 0.5
+
+            # set particles object scale
+            particles_obj.scale = (width * 1.3, width * 1.3, length)
+            # apply scale
+            bpy.ops.object.transform_apply(location=False, rotation=False, scale=True)
+
+            # set particles object rotation
+            particles_obj.rotation_euler = camera.rotation_euler
+        except:
+            self.report({'ERROR'}, "Can not set particles object location")
 
     def append(self, context):
         #append node group

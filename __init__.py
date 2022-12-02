@@ -47,14 +47,22 @@ import bpy
 
 
 def register():
+    bpy.utils.register_class(ParticleProperties)
+    bpy.utils.register_class(particlesManipulation)
     bpy.utils.register_class(insertParticles)
+    
     bpy.utils.register_class(particlesPanel)
+
+    bpy.types.Scene.particle_properties = bpy.props.PointerProperty(type=ParticleProperties)
 
     
     print("Render Particles registered")
 
 def unregister():
     bpy.utils.unregister_class(particlesPanel)
+    bpy.utils.unregister_class(particlesManipulation)
+    bpy.utils.unregister_class(ParticleProperties)
+
     bpy.utils.unregister_class(insertParticles)
 
     
