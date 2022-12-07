@@ -34,36 +34,23 @@ import importlib
 import sys
 from .particles import *
 from .ui import *
+from .properties import *
 
 import bpy
 
-#if "bpy" in locals():
-    #try: importlib.reload(save_selection_edit)
-    #except: from . import save_selection_edit
 
-#else:
-    #from . import save_selection_edit
-
-
+classes = [ParticleProperties, ParticlesPanel, ParticlesManipulation, InsertParticles, ParticlesMovement]
 
 def register():
-    bpy.utils.register_class(ParticleProperties)
-    bpy.utils.register_class(particlesManipulation)
-    bpy.utils.register_class(insertParticles)
-    
-    bpy.utils.register_class(particlesPanel)
+    for cls in classes:
+        bpy.utils.register_class(cls)
 
     bpy.types.Scene.particle_properties = bpy.props.PointerProperty(type=ParticleProperties)
 
-    
     print("Render Particles registered")
 
 def unregister():
-    bpy.utils.unregister_class(particlesPanel)
-    bpy.utils.unregister_class(particlesManipulation)
-    bpy.utils.unregister_class(ParticleProperties)
-
-    bpy.utils.unregister_class(insertParticles)
-
+    for cls in classes:
+        bpy.utils.unregister_class(cls)
     
     print("Render Particles unregistered")
